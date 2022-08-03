@@ -1,4 +1,10 @@
-const audioCapture = (muteTab) => {
+var socket = null;
+
+const audioCapture = (muteTab, socket) => {
+  console.log("capturing audio")
+
+  return
+
   chrome.tabCapture.capture({
     audio: true
   }, (stream) => { // sets up stream for capture
@@ -33,6 +39,7 @@ const audioCapture = (muteTab) => {
         endTabId = tabs[0].id;
         if (startTabId === endTabId) {
           closeStream(endTabId);
+          socket.close();
         }
       })
     }
@@ -74,27 +81,18 @@ const startCapture = function () {
   }, (tabs) => {
     if (!sessionStorage.getItem(tabs[0].id)) {
       sessionStorage.setItem(tabs[0].id, Date.now());
-      chrome.storage.sync.get({
-        maxTime: 1200000,
-        muteTab: false,
-        format: "mp3",
-        quality: 192,
-        limitRemoved: false
-      }, (options) => {
-        let time = options.maxTime;
-        if (time > 1200000) {
-          time = 1200000
-        }
-        audioCapture(time, options.muteTab, options.format, options.quality, options.limitRemoved);
+
+      socket = io.connect('http://localhost:3000');
+      socket.on("hello", function (data) {
+        console.log(data.text);
       });
-      chrome.runtime.sendMessage({
-        captureStarted: tabs[0].id,
-        startTime: Date.now()
-      });
+
+      audioCapture(false, socket);
+
+      chrome.runtime.sendMessage({captureStarted: tabs[0].id, startTime: Date.now()});
     }
   });
 };
-
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === "start") {
