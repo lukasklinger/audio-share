@@ -1,23 +1,28 @@
+const serverURL = "http://localhost:3000"
 var socket = null;
+var roomID = "";
 
 const audioCapture = (muteTab, socket) => {
   console.log("capturing audio")
 
-  return
-
-  chrome.tabCapture.capture({
-    audio: true
-  }, (stream) => { // sets up stream for capture
+  chrome.tabCapture.capture({audio: true}, (stream) => { // sets up stream for capture
     let startTabId; //tab when the capture is started
 
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, (tabs) => startTabId = tabs[0].id) //saves start tab
+    chrome.tabs.query({active: true, currentWindow: true},
+      (tabs) => startTabId = tabs[0].id) //saves start tab
 
     const liveStream = stream;
-    const audioCtx = new AudioContext();
-    const source = audioCtx.createMediaStreamSource(stream);
+
+    const presenter = new ScarletsMediaPresenter({mediaStream: liveStream}, 500);
+    
+    // audio sink to capture and send data into socket
+    const audioSink = new MediaRecorder(stream);
+
+    // send audio binary data into socket to server
+    audioSink.ondataavailable = function(e) {socket.emit("audio", e.data)}
+
+    // dump audio data every 250 milliseconds
+    audioSink.start(250);
 
     // TODO do something with the source
 
@@ -44,10 +49,10 @@ const audioCapture = (muteTab, socket) => {
       })
     }
 
-    //removes the audio context and closes recorder to save memory
+    // removes the audio context and closes recorder to save memory
     const closeStream = function (endTabId) {
       chrome.runtime.onMessage.removeListener(onStopClick);
-      audioCtx.close();
+      audioSink.stop();
       liveStream.getAudioTracks()[0].stop();
       sessionStorage.removeItem(endTabId);
       chrome.runtime.sendMessage({
@@ -82,10 +87,15 @@ const startCapture = function () {
     if (!sessionStorage.getItem(tabs[0].id)) {
       sessionStorage.setItem(tabs[0].id, Date.now());
 
-      socket = io.connect('http://localhost:3000');
-      socket.on("hello", function (data) {
-        console.log(data.text);
-      });
+      //roomID = generateString(8);
+      roomID = "hello";
+
+      socket = io.connect(serverURL);
+      socket.emit("roomID", roomID);
+
+      socket.on("connect", () => {
+        socket.emit("roomID", roomID);
+      })
 
       audioCapture(false, socket);
 
@@ -94,8 +104,15 @@ const startCapture = function () {
   });
 };
 
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "start") {
-    startCapture();
-  }
-});
+// declare all characters
+const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+function generateString(length) {
+    let result = ' ';
+    const charactersLength = characters.length;
+    for ( let i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+
+    return result;
+}

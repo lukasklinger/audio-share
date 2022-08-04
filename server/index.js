@@ -17,4 +17,13 @@ server.listen(3000, () => {
 
 io.on('connection', (socket) => {
   console.log('a user connected');
+
+  socket.on("roomID", (idString) => {
+    console.log("Joining room: " + idString)
+    socket.join(idString)
+  })
+
+  socket.on("audio", (blob) => {
+    socket.in(Array.from(socket.rooms)[1]).volatile.emit("audio", blob)
+  })
 });
