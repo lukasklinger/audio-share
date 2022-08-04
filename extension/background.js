@@ -1,6 +1,7 @@
 const serverURL = "http://localhost:3000"
 var socket = null;
 var roomID = "";
+var headerInterval = null;
 
 const audioCapture = (muteTab, socket) => {
   console.log("capturing audio")
@@ -15,14 +16,15 @@ const audioCapture = (muteTab, socket) => {
 
     const presenter = new ScarletsMediaPresenter({mediaStream: liveStream}, 500);
     
-    // audio sink to capture and send data into socket
-    const audioSink = new MediaRecorder(stream);
+    presenter.onRecordingReady = function(packet) {
+      headerInterval = setInterval(() => {socket.emit("bufferHeader", packet)}, 500)
+    }
 
-    // send audio binary data into socket to server
-    audioSink.ondataavailable = function(e) {socket.emit("audio", e.data)}
+    presenter.onBufferProcess = function(packet) {
+      socket.emit("audio", packet);
+    }
 
-    // dump audio data every 250 milliseconds
-    audioSink.start(250);
+    presenter.startRecording();
 
     // TODO do something with the source
 
@@ -52,7 +54,8 @@ const audioCapture = (muteTab, socket) => {
     // removes the audio context and closes recorder to save memory
     const closeStream = function (endTabId) {
       chrome.runtime.onMessage.removeListener(onStopClick);
-      audioSink.stop();
+      clearInterval(headerInterval);
+      presenter.stopRecording();
       liveStream.getAudioTracks()[0].stop();
       sessionStorage.removeItem(endTabId);
       chrome.runtime.sendMessage({

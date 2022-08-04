@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./assets/css/bulma.min.css">
 
     <script src="./socket.io/socket.io.js"></script>
+    <script src="./assets/js/sfmediastream.js"></script>
     <script src="./assets/js/index.js"></script>
 </head>
 
@@ -21,8 +22,14 @@
         </div>
     </section>
 
-    <section>
-        <button class="button" onclick="connect()">Join</button>
+    <section class="section">
+        <div class="container">
+            <div class="level">
+                <p class="level-item has-text-centered">
+                    <button id="playButton" class="button is-large is-info is-rounded" onclick="clickHandler()">Join Stream</button>
+                </p>
+            </div>
+        </div>
     </section>
 
 </body>
