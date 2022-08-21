@@ -11,15 +11,15 @@ var pipes = new Map();
 
 app.use(express.static(__dirname + '/public'))
 
-app.get('/*.ogg', (req, res) => {
-  roomID = req.path.replace("/", "").replace(".ogg", "")
+app.get('/*.mp3', (req, res) => {
+  roomID = req.path.replace("/", "").replace(".mp3", "")
   console.log(roomID)
 
   if (!pipes.has(roomID)) {
     res.statusCode = 404
     res.end()
   } else {
-    res.set({"Content-Type": "audio/ogg"})
+    res.set({"Content-Type": "audio/mpeg"})
     pipes.get(roomID).pipe(res)
   }
 })
@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
   console.log('a user connected')
-  var ffmpeg = child_process.spawn(pathFFMPEG, ["-i", "-", "-c:a", "libvorbis", "-b:a", "64k", "-f", "ogg", "pipe:1"])
+  var ffmpeg = child_process.spawn(pathFFMPEG, ["-i", "-", "-c:a", "libmp3lame", "-b:a", "64k", "-f", "mp3", "pipe:1"])
   var roomID
 
   socket.on("roomID", (idString) => {

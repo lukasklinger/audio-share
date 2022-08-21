@@ -39,22 +39,22 @@ function showLoading() {
 function connect() {
     console.log("connect")
     streaming = true
-    showStopPlayback()
 
     var roomID = getRoomID()
     console.log("Joining room: " + roomID)
 
     player = document.getElementById("player")
-    player.src = "./" + roomID + ".ogg"
-    player.play()
-    player.currentTime = player.duration
-
-    console.log(player.duration)
+    player.src = "./" + roomID + ".mp3"
+    player.load()
+    player.play().then(() => {
+        showStopPlayback()
+    })
 }
 
 function disconnect() {
     player = document.getElementById("player")
-    player.stop()
+    player.pause()
+    player.src = ""
 
     showJoinStream()
     streaming = false
