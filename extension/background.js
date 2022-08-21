@@ -1,7 +1,7 @@
 const serverURL = "http://localhost:3000"
 var socket = null;
 var roomID = "";
-var headerInterval = null;
+var chunkInterval = null;
 
 const audioCapture = (muteTab, socket) => {
   console.log("capturing audio")
@@ -14,19 +14,20 @@ const audioCapture = (muteTab, socket) => {
 
     const liveStream = stream;
 
-    const presenter = new ScarletsMediaPresenter({mediaStream: liveStream}, 500);
-    
-    presenter.onRecordingReady = function(packet) {
-      headerInterval = setInterval(() => {socket.emit("bufferHeader", packet)}, 500)
-    }
+    // media recorder to fetch audio data
+    const mediaRecorder = new MediaRecorder(liveStream);
+    mediaRecorder.start();
 
-    presenter.onBufferProcess = function(packet) {
-      socket.emit("audio", packet);
-    }
+    mediaRecorder.addEventListener("dataavailable", function(event) {
+      sendAudioChunk(event.data, socket);
+    })
 
-    presenter.startRecording();
+    mediaRecorder.addEventListener("stop", function() {
+      mediaRecorder.start();
+    })
 
-    // TODO do something with the source
+    // stop recording every second and push data
+    chunkInterval = setInterval(() => {mediaRecorder.stop()}, 500);
 
     function onStopClick(request) { //click on popup
       if (request === "stopCapture") {
@@ -54,16 +55,19 @@ const audioCapture = (muteTab, socket) => {
     // removes the audio context and closes recorder to save memory
     const closeStream = function (endTabId) {
       chrome.runtime.onMessage.removeListener(onStopClick);
-      clearInterval(headerInterval);
-      presenter.stopRecording();
+
+      clearInterval(chunkInterval);
+      mediaRecorder.stop();
       liveStream.getAudioTracks()[0].stop();
+
       sessionStorage.removeItem(endTabId);
       chrome.runtime.sendMessage({
         captureStopped: endTabId
       });
     }
 
-    if (!muteTab) {
+    //if (!muteTab) {
+      if (false) {
       let audio = new Audio();
       audio.srcObject = liveStream;
       audio.play();
@@ -104,6 +108,15 @@ const startCapture = function () {
     }
   });
 };
+
+function sendAudioChunk(audioBlob, socket) {
+  // convert blob to base64 data URL
+  var fileReader = new FileReader();
+  fileReader.readAsDataURL(audioBlob);
+  fileReader.onloadend = function () {
+    socket.emit("audio", fileReader.result);
+  }
+}
 
 // declare all characters
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

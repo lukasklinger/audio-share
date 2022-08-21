@@ -23,11 +23,7 @@ io.on('connection', (socket) => {
     socket.join(idString)
   })
 
-  socket.on("audio", (blob) => {
-    socket.in(Array.from(socket.rooms)[1]).volatile.emit("audio", blob)
-  })
-
-  socket.on("bufferHeader", (blob) => {
-    socket.in(Array.from(socket.rooms)[1]).volatile.emit("bufferHeader", blob)
+  socket.on("audio", (b64DataURL) => {
+    socket.in(Array.from(socket.rooms)[1]).emit("audio", b64DataURL)
   })
 });
