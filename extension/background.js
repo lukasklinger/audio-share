@@ -1,4 +1,4 @@
-const serverURL = "http://localhost:3000"
+const serverURL = "https://audioshare.cyaniccerulean.com"
 var socket = null;
 var roomID = "";
 
