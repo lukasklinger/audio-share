@@ -13,7 +13,6 @@ app.use(express.static(__dirname + '/public'))
 
 app.get('/*.mp3', (req, res) => {
   roomID = req.path.replace("/", "").replace(".mp3", "")
-  console.log(roomID)
 
   if (!pipes.has(roomID)) {
     res.statusCode = 404
