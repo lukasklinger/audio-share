@@ -1,7 +1,6 @@
 const serverURL = "http://localhost:3000"
 var socket = null;
 var roomID = "";
-var chunkInterval = null;
 
 const audioCapture = (muteTab, socket) => {
   console.log("capturing audio")
@@ -15,19 +14,12 @@ const audioCapture = (muteTab, socket) => {
     const liveStream = stream;
 
     // media recorder to fetch audio data
-    const mediaRecorder = new MediaRecorder(liveStream);
-    mediaRecorder.start();
-
+    const mediaRecorder = new MediaRecorder(liveStream, {mimeType: 'audio/webm'});
     mediaRecorder.addEventListener("dataavailable", function(event) {
       sendAudioChunk(event.data, socket);
     })
 
-    mediaRecorder.addEventListener("stop", function() {
-      mediaRecorder.start();
-    })
-
-    // stop recording every second and push data
-    chunkInterval = setInterval(() => {mediaRecorder.stop()}, 500);
+    mediaRecorder.start(500);
 
     function onStopClick(request) { //click on popup
       if (request === "stopCapture") {
@@ -56,7 +48,6 @@ const audioCapture = (muteTab, socket) => {
     const closeStream = function (endTabId) {
       chrome.runtime.onMessage.removeListener(onStopClick);
 
-      clearInterval(chunkInterval);
       mediaRecorder.stop();
       liveStream.getAudioTracks()[0].stop();
 
@@ -78,7 +69,7 @@ const audioCapture = (muteTab, socket) => {
 //sends reponses to and from the popup menu
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.currentTab && sessionStorage.getItem(request.currentTab)) {
-    sendResponse({item: sessionStorage.getItem(request.currentTab), stream: serverURL + "/" + roomID});
+    sendResponse({item: sessionStorage.getItem(request.currentTab), stream: serverURL + "/?room=" + roomID});
   } else if (request.currentTab) {
     sendResponse(false);
   } else if (request === "startCapture") {
@@ -104,18 +95,13 @@ const startCapture = function () {
 
       audioCapture(false, socket);
 
-      chrome.runtime.sendMessage({captureStarted: tabs[0].id, startTime: Date.now(), stream: serverURL + "/" + roomID});
+      chrome.runtime.sendMessage({captureStarted: tabs[0].id, startTime: Date.now(), stream: serverURL + "/?room=" + roomID});
     }
   });
 };
 
 function sendAudioChunk(audioBlob, socket) {
-  // convert blob to base64 data URL
-  var fileReader = new FileReader();
-  fileReader.readAsDataURL(audioBlob);
-  fileReader.onloadend = function () {
-    socket.emit("audio", fileReader.result);
-  }
+  socket.emit("audio", audioBlob);
 }
 
 // declare all characters

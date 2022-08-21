@@ -1,6 +1,5 @@
 var socket = null
 var streaming = false
-var audioBuffer = new Queue()
 
 function clickHandler() {
     if (!streaming) {
@@ -43,41 +42,27 @@ function connect() {
     showStopPlayback()
 
     var roomID = getRoomID()
-    socket = io()
-
     console.log("Joining room: " + roomID)
 
-    // join room to start receiving data
-    socket.emit("roomID", roomID)
+    player = document.getElementById("player")
+    player.src = "./" + roomID + ".ogg"
+    player.play()
+    player.currentTime = player.duration
 
-    // join room on reconnect
-    socket.on("connect", () => {
-        socket.emit("roomID", roomID)
-    })
-
-    // pipe audio chunks into decoder
-    socket.on("audio", function (b64DataURL) {
-        audioBuffer.enqueue(b64DataURL)
-        console.log("data")
-    });
-
-    setTimeout(startPlayback, 2000)
-}
-
-function startPlayback() {
-    setInterval(() => {
-        var audio = new Audio(audioBuffer.dequeue())
-        audio.play()
-    }, 500)
+    console.log(player.duration)
 }
 
 function disconnect() {
-    socket.disconnect()
+    player = document.getElementById("player")
+    player.stop()
+
     showJoinStream()
     streaming = false
 }
 
 function getRoomID() {
-    var pathArray = window.location.pathname.split('/')
-    return pathArray[1]
+    var url = new URL(window.location);
+    var params = new URLSearchParams(url.search.slice(1))
+    console.log(params)
+    return params.get("room")
 }
