@@ -42,7 +42,7 @@ function connect() {
     console.log("connect")
     streaming = true
 
-    var roomID = "hello"
+    var roomID = getRoomID()
     socket = io()
     audioStreamer = new ScarletsAudioStreamer(500)
 
@@ -71,12 +71,17 @@ function connect() {
 }
 
 function disconnect() {
-    streaming = false;
-    showJoinStream();
+    streaming = false
+    showJoinStream()
 
     if (audioStreamer != undefined) {
-        audioStreamer.stop();
-        socket.disconnect();
-        headerReceived = false;
+        audioStreamer.stop()
+        socket.disconnect()
+        headerReceived = false
     }
+}
+
+function getRoomID() {
+    var pathArray = window.location.pathname.split('/')
+    return pathArray[1]
 }

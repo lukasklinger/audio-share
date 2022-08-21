@@ -29,20 +29,15 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     currentWindow: true
   }, (tabs) => {
     const status = document.getElementById("status");
-    const buttons = document.getElementById("buttons");
     const startButton = document.getElementById('start');
     const finishButton = document.getElementById('finish');
 
     if (request.captureStarted && request.captureStarted === tabs[0].id) {
-      chrome.storage.sync.get({
-        maxTime: 1200000,
-        limitRemoved: false
-      }, () => {
-        status.innerHTML = "Tab is currently being captured";
-      });
-
       finishButton.style.display = "block";
       startButton.style.display = "none";
+
+      statusHTML = "Listen to the stream at: <a href='" + request.stream + "'>" + request.stream + "</a>";
+      status.innerHTML = statusHTML;
     } else if (request.captureStopped && request.captureStopped === tabs[0].id) {
       status.innerHTML = "";
       finishButton.style.display = "none";

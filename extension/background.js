@@ -90,8 +90,7 @@ const startCapture = function () {
     if (!sessionStorage.getItem(tabs[0].id)) {
       sessionStorage.setItem(tabs[0].id, Date.now());
 
-      //roomID = generateString(8);
-      roomID = "hello";
+      roomID = generateString(8);
 
       socket = io.connect(serverURL);
       socket.emit("roomID", roomID);
@@ -102,7 +101,7 @@ const startCapture = function () {
 
       audioCapture(false, socket);
 
-      chrome.runtime.sendMessage({captureStarted: tabs[0].id, startTime: Date.now()});
+      chrome.runtime.sendMessage({captureStarted: tabs[0].id, startTime: Date.now(), stream: serverURL + "/" + roomID});
     }
   });
 };
@@ -111,8 +110,9 @@ const startCapture = function () {
 const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 function generateString(length) {
-    let result = ' ';
+    let result = '';
     const charactersLength = characters.length;
+
     for ( let i = 0; i < length; i++ ) {
         result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
