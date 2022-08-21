@@ -74,7 +74,7 @@ const audioCapture = (muteTab, socket) => {
 //sends reponses to and from the popup menu
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.currentTab && sessionStorage.getItem(request.currentTab)) {
-    sendResponse(sessionStorage.getItem(request.currentTab));
+    sendResponse({item: sessionStorage.getItem(request.currentTab), stream: serverURL + "/" + roomID});
   } else if (request.currentTab) {
     sendResponse(false);
   } else if (request === "startCapture") {
@@ -88,9 +88,8 @@ const startCapture = function () {
     currentWindow: true
   }, (tabs) => {
     if (!sessionStorage.getItem(tabs[0].id)) {
-      sessionStorage.setItem(tabs[0].id, Date.now());
-
       roomID = generateString(8);
+      sessionStorage.setItem(tabs[0].id, Date.now());
 
       socket = io.connect(serverURL);
       socket.emit("roomID", roomID);

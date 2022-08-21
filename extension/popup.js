@@ -10,10 +10,7 @@ const displayStatus = function () {
 
     chrome.runtime.sendMessage({currentTab: tabs[0].id}, (response) => {
       if (response) {
-        chrome.storage.sync.get({maxTime: 1200000, limitRemoved: false}, () => {
-          status.innerHTML = "Streaming this tab."; // TODO: add link
-        });
-
+        status.innerHTML = "Listen to the stream at: <a href='" + response.stream + "'>" + response.stream + "</a>";
         finishButton.style.display = "block";
       } else {
         startButton.style.display = "block";
@@ -35,9 +32,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     if (request.captureStarted && request.captureStarted === tabs[0].id) {
       finishButton.style.display = "block";
       startButton.style.display = "none";
-
-      statusHTML = "Listen to the stream at: <a href='" + request.stream + "'>" + request.stream + "</a>";
-      status.innerHTML = statusHTML;
+      status.innerHTML = "Listen to the stream at: <a href='" + request.stream + "'>" + request.stream + "</a>";
     } else if (request.captureStopped && request.captureStopped === tabs[0].id) {
       status.innerHTML = "";
       finishButton.style.display = "none";
