@@ -57,8 +57,7 @@ const audioCapture = (muteTab, socket) => {
       });
     }
 
-    //if (!muteTab) {
-      if (false) {
+    if (!muteTab) {
       let audio = new Audio();
       audio.srcObject = liveStream;
       audio.play();
