@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
   console.log('a user connected')
-  var ffmpeg = child_process.spawn(pathFFMPEG, ["-i", "-", "-c:a", "libmp3lame", "-b:a", "64k", "-f", "mp3", "pipe:1"])
+  var ffmpeg = child_process.spawn(pathFFMPEG, ["-i", "-", "-c:a", "libmp3lame", "-b:a", "128k", "-f", "mp3", "pipe:1"])
   var roomID
 
   socket.on("roomID", (idString) => {
