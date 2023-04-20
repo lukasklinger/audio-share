@@ -9,6 +9,7 @@
   "author": "lukas",
   "license": "MIT-0",
   "dependencies": {
+    "dev-null": "^0.1.1",
     "express": "^4.18.1",
     "ffmpeg-static": "^5.0.2",
     "socket.io": "^4.5.1"
