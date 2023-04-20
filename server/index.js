@@ -1,5 +1,7 @@
 const child_process = require('child_process')
 const pathFFMPEG = require('ffmpeg-static')
+const devnull = require('dev-null')
+
 const express = require('express')
 const app = express()
 const http = require('http')
@@ -48,6 +50,7 @@ io.on('connection', (socket) => {
   ffmpeg.on('close', (code, signal) => {console.log("ffmpeg gone bye-bye... " + code + " " + signal)})
   ffmpeg.stdin.on('error', (e) => {console.log("stdin err: " + e)})
   ffmpeg.stderr.on('data', (data) => {console.log("err: " + data)})
+  ffmpeg.stdout.pipe(devnull())
 });
 
 server.listen(3000, () => {console.log('listening on *:3000')})
